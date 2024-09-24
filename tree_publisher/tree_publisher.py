@@ -17,20 +17,20 @@ class ImageReceiver(Node):
         )
         self.subscription = self.create_subscription(
             Point,
-            'gui_mouse_click',
+            'gui_mouse_left',
             self.mouse_click_callback,
             10
         )
         self.image = None
         self.cv_image = None  # OpenCV形式の画像（表示用）
         self.get_logger().info("Image Receiver Node Initialized")
-
+        self.bridge = CvBridge()
         self.point=None
 
     def image_callback(self, msg):
         self.image = msg
         # ROS2のImageメッセージをOpenCV形式に変換
-        self.cv_image = np.frombuffer(msg.data, dtype=np.uint8).reshape(msg.height, msg.width, -1)
+        self.cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.get_logger().info("Image received")
     
     def mouse_click_callback(self, msg):
@@ -47,18 +47,18 @@ class ImageReceiver(Node):
 class ButtonHandler:
     def __init__(self, image_sender):
         self.image_sender = image_sender
-        self.button_positions = [(50, 50), (250, 50), (450, 50), (650, 50), (850, 50)]
-        self.button_width = 150
+        self.button_positions = [(7, 50), (135, 50), (263, 50), (391, 50), (519, 50)]
+        self.button_width = 107
         self.button_height = 100
-        self.texts = ["Topic1", "Topic2", "Topic3", "Topic4", "Topic5"]
+        self.texts = ["qr", "meter", "rust", "crack", "temp"]
 
     def draw_buttons(self, img):
         for i, pos in enumerate(self.button_positions):
             top_left = pos
             bottom_right = (top_left[0] + self.button_width, top_left[1] + self.button_height)
-            cv2.rectangle(img, top_left, bottom_right, (0, 0, 255), 2)
+            cv2.rectangle(img, top_left, bottom_right, (255, 255, 255), -1)
             cv2.putText(img, self.texts[i], (top_left[0] + 10, top_left[1] + 50), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0, 0), 2)
 
     def on_mouse_click(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -82,11 +82,11 @@ class ButtonHandler:
 class ImageSender(Node):
     def __init__(self):
         super().__init__('image_sender')
-        self.publisher1 = self.create_publisher(Image, 'topic1', 10)
-        self.publisher2 = self.create_publisher(Image, 'topic2', 10)
-        self.publisher3 = self.create_publisher(Image, 'topic3', 10)
-        self.publisher4 = self.create_publisher(Image, 'topic4', 10)
-        self.publisher5 = self.create_publisher(Image, 'topic5', 10)
+        self.publisher1 = self.create_publisher(Image, 'qr_image', 10)
+        self.publisher2 = self.create_publisher(Image, 'pressure_image', 10)
+        self.publisher3 = self.create_publisher(Image, 'rust_image', 10)
+        self.publisher4 = self.create_publisher(Image, 'crack_image', 10)
+        self.publisher5 = self.create_publisher(Image, 'temperature_image', 10)
         self.gui_publish = self.create_publisher(Image, 'gui', 10)
         self.last_received_image = None
 

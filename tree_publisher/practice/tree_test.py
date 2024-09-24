@@ -51,7 +51,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     # ディレクトリパスの設定
-    directory_path = "/home/ros/ros2_ws/src/pressure/data/0908_results"  # ここに.jpg画像があるディレクトリパスを設定
+    directory_path = "/home/ros/ros2_ws/src/pressure/data/cropped_images"  # ここに.jpg画像があるディレクトリパスを設定
 
     image_publisher = TestImagePublisher(directory_path)
 
