@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import String, Float64
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
 import cv2
@@ -12,8 +12,17 @@ from cv_bridge import CvBridge, CvBridgeError
 class ButtonHandler:
     def __init__(self):
         # ボタンの位置とサイズ
-        self.button_positions = [
-            (10, 70), (130, 70), (10, 140), (130, 140), (10, 210), (130, 210)]
+        self.button_positions = []
+        baseX = 10
+        diffX = 120
+        baseY = 45
+        diffY = 70
+
+        for y in range(3):
+            for x in range(2):
+                pos_x = baseX+diffX*x
+                pos_y = baseY+diffY*y
+                self.button_positions.append((pos_x, pos_y))
         self.button_width = 110
         self.button_height = 50
         # 各ボタンに対応するテキスト
@@ -83,10 +92,34 @@ class DistributeImage(Node):
             10
         )
 
+        # 結果受け取り(表示用)
+        self.result_status = "None"
+        self.result_value = ""
+        self.result_qr = None
+
+        self.current_result_status_subscription = self.create_subscription(
+            String,
+            'current_result_status',
+            self.current_result_status_callback,
+            10
+        )
+        self.current_result_value_subscription = self.create_subscription(
+            Float64,
+            'current_result_value',
+            self.current_result_value_callback,
+            10
+        )
+        self.current_result_qr_subscription = self.create_subscription(
+            String,
+            'current_result_qr',
+            self.current_result_qr_callback,
+            10
+        )
+
     def publish_gui(self):
         if self.cv_image is not None:
             # 黒い長方形の背景画像を作成
-            img_with_buttons = np.zeros((280, 250, 3), dtype=np.uint8)
+            img_with_buttons = np.zeros((350, 250, 3), dtype=np.uint8)
             # テキスト「MISORA 2」を高さ70以内に中央に描画
             text = "MISORA 2"
             font = cv2.FONT_HERSHEY_SIMPLEX
@@ -95,11 +128,24 @@ class DistributeImage(Node):
             text_size = cv2.getTextSize(
                 text, font, font_scale, font_thickness)[0]
             text_x = (img_with_buttons.shape[1] - text_size[0]) // 2  # 中央に配置
-            text_y = 50  # 高さ70以内の中央
+            text_y = 35  # 高さ70以内の中央
             # 黒い背景に白で文字を描画
             cv2.putText(img_with_buttons, text, (text_x, text_y),
                         font, font_scale, (255, 255, 255), font_thickness)
             self.button_handler.draw_buttons(img_with_buttons)
+
+            # 最新の結果の表示
+            result_text_x = 20
+            result_text_y = 270
+            cv2.putText(img_with_buttons, f"{self.result_status}", (result_text_x, result_text_y),
+                        font, 1, (255, 255, 255), 1)
+            cv2.putText(img_with_buttons, f"QR: {self.result_qr}", (result_text_x+10, result_text_y+25),
+                        font, 0.7, (255, 255, 255), 1)
+            result_value_text = f"Result: {self.result_value}"
+            if self.result_status == "None":
+                result_value_text = f"Result: None"
+            cv2.putText(img_with_buttons, result_value_text, (result_text_x+10, result_text_y+50),
+                        font, 0.7, (255, 255, 255), 1)
 
             try:
                 selection_image = self.bridge.cv2_to_imgmsg(
@@ -123,6 +169,15 @@ class DistributeImage(Node):
                 msg, desired_encoding='bgr8')
         except CvBridgeError as e:
             self.get_logger().error(e)
+
+    def current_result_status_callback(self, msg):
+        self.result_status = msg.data
+
+    def current_result_value_callback(self, msg):
+        self.result_value = msg.data
+
+    def current_result_qr_callback(self, msg):
+        self.result_qr = msg.data
 
 
 def main(args=None):
