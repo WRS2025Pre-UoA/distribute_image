@@ -111,7 +111,7 @@ class DistributeImage(Node):
     def mouse_click_callback(self, point):
         self.get_logger().info("Point received")
         if self.last_received_image != None:
-            values = [self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, String()]
+            values = [self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, String()]
             self.button_handler.clicked_image(
                 point.x, point.y, self.image_publishers, values)
 
