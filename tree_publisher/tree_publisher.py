@@ -23,10 +23,18 @@ class ButtonHandler:
                 pos_x = baseX+diffX*x
                 pos_y = baseY+diffY*y
                 self.button_positions.append((pos_x, pos_y))
+        
+        # 横長のボタンの左上座標
+        horizontal_button_pos_x = baseX
+        horizontal_button_pos_y = baseY + diffY * 3  # 3段目のボタンの下に配置
+
+        # 横長のボタンの位置をリストに追加
+        self.button_positions.append((horizontal_button_pos_x, horizontal_button_pos_y))
+
         self.button_width = 110
         self.button_height = 50
         # 各ボタンに対応するテキスト
-        self.texts = ["Meter", "QR", "Rust", "Crack", "Temp", "Send"]
+        self.texts = ["Meter", "QR", "QR_M", "Crack", "Photo", "Bulb" ,"Send"]
 
     def draw_buttons(self, img):
         # 背景に黒の長方形を描画 (250x280)
@@ -37,13 +45,24 @@ class ButtonHandler:
         # 各ボタンを描画
         for i, pos in enumerate(self.button_positions):
             top_left = pos
-            bottom_right = (top_left[0] + self.button_width,
-                            top_left[1] + self.button_height)
-            # 白でボタンを描画
-            cv2.rectangle(img, top_left, bottom_right, (255, 255, 255), -1)
-            # ボタン上にテキストを描画
-            cv2.putText(img, self.texts[i], (top_left[0] + 10, top_left[1] + 35),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            if i != 6:
+                bottom_right = (top_left[0] + self.button_width,
+                                top_left[1] + self.button_height)
+                # 白でボタンを描画
+                cv2.rectangle(img, top_left, bottom_right, (255, 255, 255), -1)
+                # ボタン上にテキストを描画
+                cv2.putText(img, self.texts[i], (top_left[0] + 10, top_left[1] + 35),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            
+            elif i == 6:
+                bottom_right = (top_left[0] + self.button_width*2+10,
+                                top_left[1] + self.button_height)
+                # 白でボタンを描画
+                cv2.rectangle(img, top_left, bottom_right, (255, 255, 255), -1)
+                # ボタン上にテキストを描画
+                cv2.putText(img, self.texts[i], (top_left[0] + 10 + int(self.button_width/2), top_left[1] + 35),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
 
     def clicked_image(self, x, y, send_hundlers, values):
         for i, pos in enumerate(self.button_positions):
@@ -62,9 +81,10 @@ class DistributeImage(Node):
         self.image_publishers = [
             self.create_publisher(Image, 'pressure_image', 1),
             self.create_publisher(Image, 'qr_image', 1),
-            self.create_publisher(Image, 'rust_image', 1),
+            self.create_publisher(Image, 'qr_image_manual', 1),
             self.create_publisher(Image, 'crack_image', 1),
-            self.create_publisher(Image, 'temperature_image', 1),
+            self.create_publisher(Image, 'situation_image', 1),
+            self.create_publisher(Image, 'bulb_image', 1),
             self.create_publisher(String, 'send_topic', 1),
         ]
         self.bridge = CvBridge()
@@ -119,7 +139,7 @@ class DistributeImage(Node):
     def publish_gui(self):
         if self.cv_image is not None:
             # 黒い長方形の背景画像を作成
-            img_with_buttons = np.zeros((350, 250, 3), dtype=np.uint8)
+            img_with_buttons = np.zeros((450, 250, 3), dtype=np.uint8)
             # テキスト「MISORA 2」を高さ70以内に中央に描画
             text = "MISORA 2"
             font = cv2.FONT_HERSHEY_SIMPLEX
@@ -136,7 +156,7 @@ class DistributeImage(Node):
 
             # 最新の結果の表示
             result_text_x = 20
-            result_text_y = 270
+            result_text_y = 370
             cv2.putText(img_with_buttons, f"{self.result_status}", (result_text_x, result_text_y),
                         font, 1, (255, 255, 255), 1)
             cv2.putText(img_with_buttons, f"QR: {self.result_qr}", (result_text_x+10, result_text_y+25),
@@ -157,7 +177,7 @@ class DistributeImage(Node):
     def mouse_click_callback(self, point):
         self.get_logger().info("Point received")
         if self.last_received_image != None:
-            values = [self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, String()]
+            values = [self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, String()]
             self.button_handler.clicked_image(
                 point.x, point.y, self.image_publishers, values)
 
