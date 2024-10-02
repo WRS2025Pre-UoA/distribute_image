@@ -53,7 +53,7 @@ class ButtonHandler:
                 # ボタン上にテキストを描画
                 cv2.putText(img, self.texts[i], (top_left[0] + 10, top_left[1] + 35),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            
+            #sendボタンのとき　長い長方形
             elif i == 6:
                 bottom_right = (top_left[0] + self.button_width*2+10,
                                 top_left[1] + self.button_height)
@@ -67,12 +67,17 @@ class ButtonHandler:
     def clicked_image(self, x, y, send_hundlers, values):
         for i, pos in enumerate(self.button_positions):
             top_left = pos
-            bottom_right = (top_left[0] + self.button_width,
-                            top_left[1] + self.button_height)
+            bottom_right=[]
+            if i != 6:
+                bottom_right = (top_left[0] + self.button_width,
+                                top_left[1] + self.button_height)
+            elif i == 6:
+                bottom_right = (top_left[0] + self.button_width*2+10,
+                                top_left[1] + self.button_height)
             if top_left[0] <= x <= bottom_right[0] and top_left[1] <= y <= bottom_right[1]:
-                print(
-                    f"Button {i+1} clicked, sending image to {self.texts[i]}")
-                send_hundlers[i].publish(values[i])
+                    print(
+                        f"Button {i+1} clicked, sending image to {self.texts[i]}")
+                    send_hundlers[i].publish(values[i])
 
 
 class DistributeImage(Node):
