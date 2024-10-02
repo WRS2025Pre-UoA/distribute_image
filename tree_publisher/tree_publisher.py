@@ -81,7 +81,7 @@ class DistributeImage(Node):
         self.image_publishers = [
             self.create_publisher(Image, 'pressure_image', 1),
             self.create_publisher(Image, 'qr_image', 1),
-            self.create_publisher(Image, 'qr_image_manual', 1),
+            self.create_publisher(String, 'qr_image_manual', 1),
             self.create_publisher(Image, 'crack_image', 1),
             self.create_publisher(Image, 'situation_image', 1),
             self.create_publisher(Image, 'bulb_image', 1),
@@ -177,7 +177,7 @@ class DistributeImage(Node):
     def mouse_click_callback(self, point):
         self.get_logger().info("Point received")
         if self.last_received_image != None:
-            values = [self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, self.last_received_image, String()]
+            values = [self.last_received_image, self.last_received_image, String(), self.last_received_image, self.last_received_image, self.last_received_image, String()]
             self.button_handler.clicked_image(
                 point.x, point.y, self.image_publishers, values)
 
