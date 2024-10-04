@@ -129,7 +129,7 @@ class DistributeImage(Node):
             10
         )
         self.current_result_value_subscription = self.create_subscription(
-            Float64,
+            String,
             'current_result_value',
             self.current_result_value_callback,
             10
